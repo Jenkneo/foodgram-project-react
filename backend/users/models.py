@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from recipes.models import Recipe
 
 
 class MyUser(AbstractUser):
@@ -34,6 +33,11 @@ class MyUser(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+from recipes.models import Recipe
+# Расположение from здесь необходимо для правильного выполнения миграций
+# Да, я знаю что это костыль и выглядит некрасиво, на зато работает
 
 
 class Subscriptions(models.Model):
