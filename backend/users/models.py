@@ -33,3 +33,26 @@ class MyUser(AbstractUser):
     def __str__(self):
         return self.username
 
+
+class Subscriptions(models.Model):
+    """Подписки пользователей"""
+    author = models.ForeignKey(
+        MyUser,
+        verbose_name='Автор рецепта',
+        related_name='subscribers',
+        on_delete=models.CASCADE,
+    )
+
+    user = models.ForeignKey(
+        MyUser,
+        verbose_name='Подписчики',
+        related_name='subscriptions',
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+    def __str__(self) -> str:
+        return f'{self.user.username} -> {self.author.username}'
