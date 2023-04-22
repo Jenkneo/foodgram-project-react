@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from recipes.models import Recipe
+
 
 class MyUser(AbstractUser):
     """Кастомная модель Пользователя"""
@@ -56,3 +58,59 @@ class Subscriptions(models.Model):
 
     def __str__(self) -> str:
         return f'{self.user.username} -> {self.author.username}'
+
+
+class Favorites(models.Model):
+    """Избранные рецепты пользователя"""
+    recipe = models.ForeignKey(
+        Recipe,
+        verbose_name='Понравившиеся рецепты',
+        related_name='in_favorites',
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        MyUser,
+        verbose_name='Пользователь',
+        related_name='favorites',
+        on_delete=models.CASCADE,
+    )
+    date_added = models.DateTimeField(
+        verbose_name='Дата добавления',
+        auto_now_add=True,
+        editable=False
+    )
+
+    class Meta:
+        verbose_name = 'Избранный рецепт'
+        verbose_name_plural = 'Избранные рецепты'
+
+    def __str__(self) -> str:
+        return f'{self.user} -> {self.recipe}'
+
+
+class Carts(models.Model):
+    """Рецепты в корзине покупок"""
+    recipe = models.ForeignKey(
+        Recipe,
+        verbose_name='Рецепты в списке покупок',
+        related_name='in_carts',
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        MyUser,
+        verbose_name='Владелец списка',
+        related_name='carts',
+        on_delete=models.CASCADE,
+    )
+    date_added = models.DateTimeField(
+        verbose_name='Дата добавления',
+        auto_now_add=True,
+        editable=False
+    )
+
+    class Meta:
+        verbose_name = 'Рецепт в списке покупок'
+        verbose_name_plural = 'Рецепты в списке покупок'
+
+    def __str__(self) -> str:
+        return f'{self.user} -> {self.recipe}'
