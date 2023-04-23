@@ -1,3 +1,16 @@
 from django.shortcuts import render
 
-# Create your views here.
+class UserViewSet():
+    pass
+
+
+class IngredientViewSet():
+    pass
+
+
+class TagViewSet():
+    pass
+
+
+class RecipeViewSet():
+    pass
