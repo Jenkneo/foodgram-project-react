@@ -1,21 +1,20 @@
+from django.core import exceptions
 from django.contrib.auth import get_user_model
-from drf_extra_fields.fields import Base64ImageField
-from recipes.models import (
-    Ingredient,
-    Recipe,
-    Tag
+from django.contrib.auth.password_validation import validate_password
+from djoser.serializers import (
+    UserCreateSerializer as DjoserUserCreateSerializer
 )
-from rest_framework.serializers import (
-    ModelSerializer,
-    ReadOnlyField
-)
-
+from rest_framework import serializers
 
 User = get_user_model()
 
 
-class UserSerializer(ModelSerializer):
-    """Сериализатор для модели User"""
+class UserListSerializer(serializers.ModelSerializer):
+    """
+        Model: User
+        Method: [GET]
+        Desc.: выводит список пользователей
+    """
 
     class Meta:
         model = User
@@ -24,52 +23,72 @@ class UserSerializer(ModelSerializer):
             'id',
             'username',
             'first_name',
-            'last_name',
-            'is_subscribed'
+            'last_name'
         )
         extra_kwargs = {'password': {'write_only': True}}
 
-    def create(self, validated_data: dict) -> User:
-        """ Создаёт нового пользователя с запрошенными полями
-        """
-        user = User(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name'],
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
 
-
-class TagSerializer(ModelSerializer):
-    """Сериализатор для вывода тэгов """
+class UserCreateSerializer(DjoserUserCreateSerializer):
+    """
+        Model: User
+        Method: [POST]
+        Desc.: Создает нового пользователя
+    """
     class Meta:
-        model = Tag
-        fields = '__all__'
-        read_only_fields = '__all__',
+        model = User
+        fields = ('email',
+                  'id',
+                  'username',
+                  'first_name',
+                  'last_name',
+                  'password')
+        extra_kwargs = {
+            'first_name': {'required': True, 'allow_blank': False},
+            'last_name': {'required': True, 'allow_blank': False},
+            'email': {'required': True, 'allow_blank': False},
+        }
+
+    def validate(self, obj):
+        incorrect_usernames = ['me',
+                               'admin',
+                               'username',
+                               'first_name',
+                               'last_name']
+        if self.initial_data.get('username') in incorrect_usernames:
+            raise serializers.ValidationError(
+                {'username': 'Вы не можете использовать этот username.'}
+            )
+        return obj
 
 
-class IngredientSerializer(ModelSerializer):
-    """Сериализатор для вывода ингридиентов """
-    class Meta:
-        model = Ingredient
-        fields = '__all__'
-        read_only_fields = '__all__',
+class UserPasswordSerializer(serializers.Serializer):
+    """
+        Model: User
+        Method: [POST]
+        Desc.: Изменяет пароль пользователя
+    """
+    current_password = serializers.CharField()
+    new_password = serializers.CharField()
 
+    def validate(self, obj):
+        try:
+            validate_password(obj['new_password'])
+        except exceptions.ValidationError as e:
+            raise serializers.ValidationError(
+                {'new_password': list(e.messages)}
+            )
+        return super().validate(obj)
 
-class RecipeSerializer(ModelSerializer):
-    """Список рецептов без ингридиентов."""
-    image = Base64ImageField(read_only=True)
-    name = ReadOnlyField()
-    cooking_time = ReadOnlyField()
-
-    class Meta:
-        model = Recipe
-        fields = (
-            'id',
-            'name',
-            'image',
-            'cooking_time'
-        )
+    def update(self, instance, validated_data):
+        if not instance.check_password(validated_data['current_password']):
+            raise serializers.ValidationError(
+                {'current_password': 'Неправильный пароль.'}
+            )
+        if (validated_data['current_password']
+           == validated_data['new_password']):
+            raise serializers.ValidationError(
+                {'new_password': 'Новый пароль должен отличаться от текущего.'}
+            )
+        instance.set_password(validated_data['new_password'])
+        instance.save()
+        return validated_data
