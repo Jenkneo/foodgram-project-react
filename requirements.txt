@@ -3,3 +3,4 @@ Pillow==9.5.0
 djangorestframework==3.14.0
 djoser==2.2.0
 drf-extra-fields==3.4.1
+django-filter==23.2
