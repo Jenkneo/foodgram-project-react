@@ -8,8 +8,10 @@ from .serializers import (
     UserListSerializer,
     UserCreateSerializer,
     UserPasswordSerializer,
-    TagSerializer)
-from recipes.models import Tag
+    TagSerializer,
+    IngredientSerializer)
+from recipes.models import Tag, Ingredient
+from .filters import IngredientFilter
 
 User = get_user_model()
 
@@ -60,3 +62,14 @@ class TagViewSet(mixins.ListModelMixin,
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
+
+
+class IngredientViewSet(mixins.ListModelMixin,
+                 mixins.RetrieveModelMixin,
+                 viewsets.GenericViewSet):
+    queryset = Ingredient.objects.all()
+    permission_classes = (AllowAny, )
+    serializer_class = IngredientSerializer
+    pagination_class = None
+    search_fields = ('^name',)
+    filter_backends = (IngredientFilter,)
