@@ -7,8 +7,9 @@ from .pagination import PageLimitPaginator
 from .serializers import (
     UserListSerializer,
     UserCreateSerializer,
-    UserPasswordSerializer)
-
+    UserPasswordSerializer,
+    TagSerializer)
+from recipes.models import Tag
 
 User = get_user_model()
 
@@ -24,21 +25,38 @@ class UserViewSet(mixins.CreateModelMixin,
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return UserListSerializer
-        return UserCreateSerializer
+        else:
+            return UserCreateSerializer
 
-    @action(detail=False, methods=['get'],
-            pagination_class=None,
-            permission_classes=(IsAuthenticated,))
+    @action(
+        detail=False,
+        methods=['get'],
+        pagination_class=None,
+        permission_classes=(IsAuthenticated,)
+    )
     def me(self, request):
         serializer = UserListSerializer(request.user)
-        return Response(serializer.data,
-                        status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['post'],
-            permission_classes=(IsAuthenticated,))
+    @action(
+        detail=False,
+        methods=['post'],
+        permission_classes=(IsAuthenticated,)
+    )
     def set_password(self, request):
         serializer = UserPasswordSerializer(request.user, data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-        return Response({'detail': 'Пароль успешно изменен!'},
-                        status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'detail': 'Пароль изменен'},
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+
+class TagViewSet(mixins.ListModelMixin,
+                 mixins.RetrieveModelMixin,
+                 viewsets.GenericViewSet):
+    permission_classes = (AllowAny, )
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    pagination_class = None

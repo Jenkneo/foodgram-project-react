@@ -5,8 +5,11 @@ from djoser.serializers import (
     UserCreateSerializer as DjoserUserCreateSerializer
 )
 from rest_framework import serializers
+from recipes.models import Tag
 
 User = get_user_model()
+
+# ----------------------- Пользователи -----------------------
 
 
 class UserListSerializer(serializers.ModelSerializer):
@@ -54,9 +57,10 @@ class UserCreateSerializer(DjoserUserCreateSerializer):
                                'username',
                                'first_name',
                                'last_name']
+
         if self.initial_data.get('username') in incorrect_usernames:
             raise serializers.ValidationError(
-                {'username': 'Вы не можете использовать этот username.'}
+                {'username': 'Введеный username уже используется.'}
             )
         return obj
 
@@ -82,13 +86,27 @@ class UserPasswordSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         if not instance.check_password(validated_data['current_password']):
             raise serializers.ValidationError(
-                {'current_password': 'Неправильный пароль.'}
+                {'current_password': 'Неверный пароль.'}
             )
         if (validated_data['current_password']
            == validated_data['new_password']):
             raise serializers.ValidationError(
-                {'new_password': 'Новый пароль должен отличаться от текущего.'}
-            )
+                {'new_password':
+                     'Такой пароль уже используется. Придумайте новый'})
         instance.set_password(validated_data['new_password'])
         instance.save()
         return validated_data
+
+
+# ----------------------- Теги -----------------------
+
+
+class TagSerializer(serializers.ModelSerializer):
+    """
+        Model: Tag
+        Method: [GET]
+        Desc.: Получение всего списка тегов
+    """
+    class Meta:
+        model = Tag
+        fields = '__all__'
