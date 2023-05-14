@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+from django.db.models import Q, F
 
 class MyUser(AbstractUser):
     """Кастомная модель Пользователя"""
@@ -59,6 +59,16 @@ class Subscriptions(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_subscribe'
+            ),
+            models.CheckConstraint(
+                check=~Q(author=F('user')),
+                name='\nNo self sibscription\n'
+            )
+        ]
 
     def __str__(self) -> str:
         return f'{self.user.username} -> {self.author.username}'
