@@ -14,10 +14,12 @@ from .serializers import (
     TagSerializer,
     IngredientSerializer,
     RecipeSerializer,
-    RecipeCreateSerializer
+    RecipeCreateSerializer,
+    UserSubscriptionsSerializer,
+    UserSubscribeAuthorSerializer
 )
 from recipes.models import Tag, Ingredient, Recipe
-from users.models import Favorites
+from users.models import Subscriptions
 from .filters import IngredientFilter, RecipeFilter
 
 User = get_user_model()
@@ -44,8 +46,10 @@ class UserViewSet(mixins.CreateModelMixin,
         permission_classes=(IsAuthenticated,)
     )
     def me(self, request):
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(
+            UserSerializer(request.user),
+            status=status.HTTP_200_OK
+        )
 
     @action(
         detail=False,
@@ -60,6 +64,55 @@ class UserViewSet(mixins.CreateModelMixin,
             {'detail': 'Пароль изменен'},
             status=status.HTTP_204_NO_CONTENT
         )
+
+    @action(detail=False, methods=['get'],
+            permission_classes=(IsAuthenticated,),
+            pagination_class=PageLimitPaginator)
+    def subscriptions(self, request):
+        queryset = User.objects.filter(subscriptions__user=request.user)
+        page = self.paginate_queryset(queryset)
+        serializer = UserSubscriptionsSerializer(
+            page,
+            many=True,
+            context={'request': request}
+        )
+        return self.get_paginated_response(serializer.data)
+
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=(IsAuthenticated,))
+    def subscribe(self, request, **kwargs):
+        author = get_object_or_404(User, id=kwargs['pk'])
+        user = request.user
+
+        if user == author:
+            return Response(
+                {'detail': 'Нельзя подписаться/отписаться на самого себя'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if request.method == 'POST' and Subscriptions.objects.filter(
+            author_id=author.id,
+            user_id=user.id
+        ).exists():
+            return Response({'detail': 'Вы уже подписаны'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if request.method == 'POST':
+            serializer = UserSubscribeAuthorSerializer(
+                author,
+                data=request.data,
+                context={"request": request}
+            )
+            serializer.is_valid(raise_exception=True)
+            Subscriptions.objects.create(user=request.user, author=author)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
+
+        if request.method == 'DELETE':
+            get_object_or_404(Subscriptions, user=request.user,
+                              author=author).delete()
+            return Response({'detail': 'Успешная отписка'},
+                            status=status.HTTP_204_NO_CONTENT)
 
 
 class TagViewSet(mixins.ListModelMixin,
@@ -89,7 +142,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     http_method_names = ['get', 'post', 'patch', 'create', 'delete']
-    #serializer_class = RecipeSerializer
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):

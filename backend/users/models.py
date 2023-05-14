@@ -62,11 +62,11 @@ class Subscriptions(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'author'],
-                name='unique_subscribe'
+                name='unique_sibscription'
             ),
             models.CheckConstraint(
                 check=~Q(author=F('user')),
-                name='\nNo self sibscription\n'
+                name='\nself_sibscription\n'
             )
         ]
 
