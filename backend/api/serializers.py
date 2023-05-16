@@ -8,7 +8,6 @@ from drf_base64.fields import Base64ImageField
 from rest_framework import serializers
 from recipes.models import Tag, Ingredient, Recipe, AmountIngredient
 from users.models import Favorites, Carts, Subscriptions
-from django.db.models import F
 
 User = get_user_model()
 
@@ -25,7 +24,7 @@ class RecipeMiniSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-        read_only_fields = '__all__',
+        read_only_fields = ('image', 'name')
 
 
 # ----------------------- Пользователи -----------------------
