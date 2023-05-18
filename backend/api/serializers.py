@@ -18,13 +18,17 @@ User = get_user_model()
 class RecipeMiniSerializer(serializers.ModelSerializer):
     """
         Model:  Recipe
-        Method: [GET]
-        Desc.:  Выводит список рецептов без ингридиентов.
-                Необходима для UserSubscribeAuthorSerializer
+        Desc.:  Вспомогательный сериализатор
+                Выводит список рецептов без ингридиентов.
     """
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = (
+            'id',
+            'name',
+            'image',
+            'cooking_time'
+        )
         read_only_fields = ('image', 'name')
 
 
@@ -38,14 +42,15 @@ class UserSerializer(DjoserUserSerializer):
         Desc.: Выводит список пользователей
     """
     is_subscribed = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
-            'email',
             'id',
             'username',
             'first_name',
             'last_name',
+            'email',
             'is_subscribed'
         )
         extra_kwargs = {'password': {'write_only': True}}
@@ -53,8 +58,11 @@ class UserSerializer(DjoserUserSerializer):
     def get_is_subscribed(self, obj):
         if (self.context.get('request')
            and not self.context['request'].user.is_anonymous):
-            return Subscriptions.objects.filter(user=self.context['request'].user,
-                                            author=obj).exists()
+            return Subscriptions.objects.filter(
+                user=self.context['request'].user,
+                author=obj
+            ).exists()
+
         return False
 
 
@@ -66,11 +74,12 @@ class UserCreateSerializer(DjoserUserCreateSerializer):
     """
     class Meta:
         model = User
-        fields = ('email',
+        fields = (
                   'id',
                   'username',
                   'first_name',
                   'last_name',
+                  'email',
                   'password')
         extra_kwargs = {
             'first_name': {'required': True, 'allow_blank': False},
@@ -78,18 +87,20 @@ class UserCreateSerializer(DjoserUserCreateSerializer):
             'email': {'required': True, 'allow_blank': False},
         }
 
-    def validate(self, obj):
-        incorrect_usernames = ['me',
-                               'admin',
-                               'username',
-                               'first_name',
-                               'last_name']
-
-        if self.initial_data.get('username') in incorrect_usernames:
-            raise serializers.ValidationError(
-                {'username': 'Введеный username уже используется.'}
-            )
-        return obj
+    # def validate(self, obj):
+    #     incorrect_usernames = [
+    #         'me',
+    #         'admin',
+    #         'username',
+    #         'first_name',
+    #         'last_name'
+    #     ]
+    #
+    #     if self.initial_data.get('username') in incorrect_usernames:
+    #         raise serializers.ValidationError(
+    #             {'username': 'Введеный username уже используется.'}
+    #         )
+    #     return obj
 
 
 class UserPasswordSerializer(serializers.Serializer):
@@ -104,9 +115,9 @@ class UserPasswordSerializer(serializers.Serializer):
     def validate(self, obj):
         try:
             validate_password(obj['new_password'])
-        except exceptions.ValidationError as e:
+        except exceptions.ValidationError as error:
             raise serializers.ValidationError(
-                {'new_password': list(e.messages)}
+                {'new_password': list(error.messages)}
             )
         return super().validate(obj)
 
@@ -115,28 +126,33 @@ class UserPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {'current_password': 'Неверный пароль.'}
             )
-        if (validated_data['current_password']
-           == validated_data['new_password']):
-            raise serializers.ValidationError(
-                {'new_password':
-                     'Такой пароль уже используется. Придумайте новый'})
         instance.set_password(validated_data['new_password'])
         instance.save()
         return validated_data
 
 
 class UserSubscriptionsSerializer(serializers.ModelSerializer):
-    """[GET] Список авторов на которых подписан пользователь."""
+    """
+        Model:  User
+        Method: [GET]
+        Desc.:  Выводит список пользователей на которых вы подписаны.
+    """
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('email', 'id',
-                  'username', 'first_name',
-                  'last_name', 'is_subscribed',
-                  'recipes', 'recipes_count')
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count'
+        )
 
     def get_is_subscribed(self, obj):
         return (
@@ -159,7 +175,11 @@ class UserSubscriptionsSerializer(serializers.ModelSerializer):
 
 
 class UserSubscribeAuthorSerializer(serializers.ModelSerializer):
-    """[POST, DELETE] Подписка на автора и отписка."""
+    """
+        Model:  User
+        Method: [POST, DELETE]
+        Desc.:  Работа с подписками и отписками от пользователей
+    """
     email = serializers.ReadOnlyField()
     username = serializers.ReadOnlyField()
     first_name = serializers.ReadOnlyField()
@@ -170,18 +190,24 @@ class UserSubscribeAuthorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'id',
-                  'username', 'first_name',
-                  'last_name', 'is_subscribed',
-                  'recipes', 'recipes_count')
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count')
         read_only_fields = '__all__',
 
     def get_is_subscribed(self, obj):
         return (
             self.context.get('request').user.is_authenticated
             and Subscriptions.objects.filter(
-            user=self.context['request'].user,
-            author=obj).exists()
+                user=self.context['request'].user,
+                author=obj
+            ).exists()
         )
 
     def get_recipes_count(self, obj):
@@ -205,6 +231,11 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
+    """
+        Model: Tag
+        Method: [GET]
+        Desc.: Получение всего списка ингредиентов
+    """
     class Meta:
         model = Ingredient
         fields = '__all__'
@@ -212,6 +243,11 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class IngredientRecipeReadSerializer(serializers.ModelSerializer):
+    """
+        Model:  AmountIngredient
+        Desc.:  Вспомогательный сериализатор
+                Используется для связи между рецептами и ингредиентами
+    """
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
         source='ingredient.id'
@@ -254,11 +290,6 @@ class RecipeSerializer(serializers.ModelSerializer):
     """
     author = UserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
-    # ingredients = IngredientRecipeReadSerializer(
-    #     many=True,
-    #     read_only=True,
-    #     source='recipes'
-    # )
     ingredients = serializers.SerializerMethodField(read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -290,12 +321,13 @@ class RecipeSerializer(serializers.ModelSerializer):
     def get_is_favorited(self, obj):
         return (
             self.context.get('request').user.is_authenticated
-            and Favorites.objects.filter(user=self.context['request'].user,
-                                         recipe=obj).exists()
+            and Favorites.objects.filter(
+                user=self.context['request'].user,
+                recipe=obj
+            ).exists()
         )
 
     def get_is_in_shopping_cart(self, instance):
-        """Проверяем наличие рецепта в списке покупок"""
         user = self.context['request'].user
         if user.is_anonymous:
             return False
