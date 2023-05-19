@@ -3,6 +3,7 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import mixins, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -22,50 +23,11 @@ from recipes.models import (
 User = get_user_model()
 
 
-class UserViewSet(mixins.CreateModelMixin,
-                  mixins.ListModelMixin,
-                  mixins.RetrieveModelMixin,
-                  viewsets.GenericViewSet):
+class UserViewSet(DjoserUserViewSet):
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     pagination_class = PageLimitPaginator
 
-    def get_serializer_class(self):
-        if self.action in ('list', 'retrieve'):
-            return serializers.UserSerializer
-        else:
-            return serializers.UserCreateSerializer
-
-    @action(
-        detail=False,
-        methods=['get'],
-        pagination_class=None,
-        permission_classes=(IsAuthenticated,)
-    )
-    def me(self, request):
-        return Response(
-            serializers.UserSerializer(request.user).data,
-            status=status.HTTP_200_OK
-        )
-
-    @action(
-        detail=False,
-        methods=['post'],
-        permission_classes=(IsAuthenticated,)
-    )
-    def set_password(self, request):
-        serializer = serializers.UserPasswordSerializer(
-            request.user,
-            data=request.data
-        )
-
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-
-        return Response(
-            {'detail': 'Пароль изменен'},
-            status=status.HTTP_204_NO_CONTENT
-        )
 
     @action(
         detail=False,
@@ -89,8 +51,8 @@ class UserViewSet(mixins.CreateModelMixin,
         methods=['post', 'delete'],
         permission_classes=(IsAuthenticated,)
     )
-    def subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['pk'])
+    def subscribe(self, request, id):
+        author = get_object_or_404(User, id=id)
         user = request.user
 
         if user == author:

@@ -62,8 +62,7 @@ class Recipe(models.Model):
         User,
         verbose_name='Автор рецепта',
         related_name='recipes',
-        on_delete=models.SET_NULL,
-        null=True,
+        on_delete=models.CASCADE
     )
     name = models.CharField(
         verbose_name='Название блюда',
