@@ -11,11 +11,6 @@ User = get_user_model()
 
 
 class RecipeMiniSerializer(serializers.ModelSerializer):
-    """
-        Model:  Recipe
-        Desc.:  Вспомогательный сериализатор
-                Выводит список рецептов без ингридиентов.
-    """
     class Meta:
         model = Recipe
         fields = (
@@ -31,11 +26,6 @@ class RecipeMiniSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(DjoserUserSerializer):
-    """
-        Model: User
-        Method: [GET]
-        Desc.: Выводит список пользователей
-    """
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
@@ -59,11 +49,6 @@ class UserSerializer(DjoserUserSerializer):
 
 
 class UserSubscriptionsSerializer(serializers.ModelSerializer):
-    """
-        Model:  User
-        Method: [GET]
-        Desc.:  Выводит список пользователей на которых вы подписаны.
-    """
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
@@ -102,11 +87,6 @@ class UserSubscriptionsSerializer(serializers.ModelSerializer):
 
 
 class UserSubscribeAuthorSerializer(serializers.ModelSerializer):
-    """
-        Model:  User
-        Method: [POST, DELETE]
-        Desc.:  Работа с подписками и отписками от пользователей
-    """
     email = serializers.ReadOnlyField()
     username = serializers.ReadOnlyField()
     first_name = serializers.ReadOnlyField()
@@ -143,11 +123,6 @@ class UserSubscribeAuthorSerializer(serializers.ModelSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
-    """
-        Model: Tag
-        Method: [GET]
-        Desc.: Получение всего списка тегов
-    """
     class Meta:
         model = Tag
         fields = '__all__'
@@ -157,11 +132,6 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
-    """
-        Model: Tag
-        Method: [GET]
-        Desc.: Получение всего списка ингредиентов
-    """
     class Meta:
         model = Ingredient
         fields = '__all__'
@@ -194,7 +164,6 @@ class IngredientRecipeReadSerializer(serializers.ModelSerializer):
 class AmountIngredientCreateSerializer(serializers.ModelSerializer):
     """
         Model:  AmountIngredient
-        Method: -
         Desc.:  Вспомогательный сериализатор для создания и получения
                 ингридиентов для модели RecipeCreateSerializer
     """
@@ -209,11 +178,6 @@ class AmountIngredientCreateSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
-    """
-        Model: Recipe
-        Method: [GET]
-        Desc.: Выводит список рецептов.
-    """
     author = UserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     ingredients = serializers.SerializerMethodField(read_only=True)
@@ -266,11 +230,6 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
-    """
-        Model: Recipe
-        Method: [GET, POST, PATCH, DELETE]
-        Desc.: Необходим для создания, обновления/изменения и удаления рецепта.
-    """
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all()
@@ -296,10 +255,11 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         dub = {
             ingr for ingr in ingr_list if ingr_list.count(ingr) > 1
         }
+        err_msg = 'Проверьте правильность заполнения ингредиентов. '
+        err_msg += 'Они не должны повторяться.'
+
         if len(dub) != 0:
-            raise serializers.ValidationError(
-                'Проверьте правильность заполнения ингредиентов. Они не должны повторяться.'
-            )
+            raise serializers.ValidationError(err_msg)
         return instance
 
     def set_ingredients(self, recipe, ingredients):
@@ -346,7 +306,4 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
-        return RecipeSerializer(
-            instance,
-            context=self.context
-        ).data
+        return RecipeSerializer(instance, context=self.context).data
