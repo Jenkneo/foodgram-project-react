@@ -50,8 +50,8 @@ class UserViewSet(DjoserUserViewSet):
         methods=['post', 'delete'],
         permission_classes=(IsAuthenticated,)
     )
-    def subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['pk'])
+    def subscribe(self, request, id):
+        author = get_object_or_404(User, id=id)
         user = request.user
 
         if user == author:
@@ -120,6 +120,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
     serializer_class = serializers.IngredientSerializer
     pagination_class = None
+    search_fields = ('^name',)
     filter_backends = (IngredientFilter,)
 
 
