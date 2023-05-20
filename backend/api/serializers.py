@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from recipes.models import Tag, Ingredient, Recipe, AmountIngredient
-from users.models import Favorites, Carts, Subscriptions
+from users.models import Favorites, Carts
 
 User = get_user_model()
 

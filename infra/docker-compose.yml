@@ -10,9 +10,13 @@ services:
     ports:
       - "5432:5432"
 
+    # Вопрос ревьюеру:
+    # можно ли оставить порты открытые? Безопасно ли это?
+    # или 1000 и 1 способ загрузки csv без доступа к БД...
+
   backend:
-    # image: jenkneo/foodgram_backend:v.21.12.22
     build:
+      # потом выгурзить в dockerhub
       context: ../backend
       dockerfile: Dockerfile
     restart: always
@@ -26,6 +30,7 @@ services:
 
   frontend:
     build:
+      # потом выгурзить в dockerhub
       context: ../frontend
       dockerfile: Dockerfile
     volumes:

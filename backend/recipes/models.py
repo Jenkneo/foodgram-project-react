@@ -133,4 +133,4 @@ class AmountIngredient(models.Model):
         ordering = ('recipe', )
 
     def __str__(self) -> str:
-        return f'{self.amount} {self.ingredients}'
+        return f'{self.amount} {self.ingredient}'
