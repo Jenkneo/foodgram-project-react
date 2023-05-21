@@ -200,7 +200,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             file_list.append('{} - {} {}.'.format(*ingredient))
         file = HttpResponse('\n'.join(file_list), content_type='text/plain')
 
-        # Название файла автоматически прописывается в фронте?
+        # файлы все равно сохраняются как 'shopping-list.txt'
+        file['Content-Disposition'] = (
+            'attachment; filename="SUPER_PUPER_SHOPPING_LIST.txt"'
+        )
         return file
 
     @action(

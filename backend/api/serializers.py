@@ -4,6 +4,7 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 from recipes.models import Tag, Ingredient, Recipe, AmountIngredient
 from users.models import Favorites, Carts
+from .utils import is_base_func
 
 User = get_user_model()
 
@@ -40,12 +41,8 @@ class UserSerializer(DjoserUserSerializer):
         )
 
     def get_is_subscribed(self, author):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-
-        if self.context.get('request'):
-            return user.subscriptions.filter(author=author).exists()
+        request = self.context.get('request')
+        return is_base_func(request, author)
 
 
 class UserSubscriptionsSerializer(serializers.ModelSerializer):
@@ -67,12 +64,8 @@ class UserSubscriptionsSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, author):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-
-        if self.context.get('request'):
-            return user.subscriptions.filter(author=author).exists()
+        request = self.context.get('request')
+        return is_base_func(request, author)
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -109,12 +102,8 @@ class UserSubscribeAuthorSerializer(serializers.ModelSerializer):
         read_only_fields = '__all__',
 
     def get_is_subscribed(self, author):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-
-        if self.context.get('request'):
-            return user.subscriptions.filter(author=author).exists()
+        request = self.context.get('request')
+        return is_base_func(request, author)
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -209,24 +198,12 @@ class RecipeSerializer(serializers.ModelSerializer):
         return IngredientRecipeReadSerializer(queryset, many=True).data
 
     def get_is_favorited(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
+        request = self.context.get('request')
+        return is_base_func(request, obj, Favorites)
 
-        return Favorites.objects.filter(
-            user=self.context['request'].user,
-            recipe=obj
-        ).exists()
-
-    def get_is_in_shopping_cart(self, instance):
-        user = self.context['request'].user
-        if user.is_anonymous:
-            return False
-
-        return Carts.objects.filter(
-            user=user,
-            recipe=instance
-        ).exists()
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get('request')
+        return is_base_func(request, obj, Carts)
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):

@@ -6,12 +6,8 @@ from .models import Ingredient, Tag, Recipe, AmountIngredient
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'author', 'favorite_count')
-    list_editable = (
-        'name', 'cooking_time', 'text', 'tags',
-        'image', 'author'
-    )
-    readonly_fields = ('favorite_count',)
     list_filter = ('name', 'author', 'tags')
+    readonly_fields = ('favorite_count',)
     empty_value_display = '-пусто-'
 
     def favorite_count(self, obj):
