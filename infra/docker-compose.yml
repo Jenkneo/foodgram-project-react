@@ -15,8 +15,8 @@ services:
     # или 1000 и 1 способ загрузки csv без доступа к БД...
 
   backend:
+    image: jenkneo/foodgram-project-react:latest
     build:
-      # потом выгурзить в dockerhub
       context: ../backend
       dockerfile: Dockerfile
     restart: always
@@ -29,8 +29,8 @@ services:
       - ./.env
 
   frontend:
+    image: jenkneo/foodgram-frontend:latest
     build:
-      # потом выгурзить в dockerhub
       context: ../frontend
       dockerfile: Dockerfile
     volumes:
