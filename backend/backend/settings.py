@@ -18,6 +18,8 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     'backend',
+    '79.137.195.216',
+    'db'
 ]
 
 
