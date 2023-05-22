@@ -39,7 +39,6 @@ jobs:
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-project-react:latest
             rm .env
             touch .env
-            echo DJANGO_KEY=${{ secrets.DJANGO_KEY }} >> .env
             echo DB_NAME=${{ secrets.DB_NAME }} >> .env
             echo POSTGRES_USER=${{ secrets.DB_USER }} >> .env
             echo POSTGRES_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
