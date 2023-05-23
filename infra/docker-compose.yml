@@ -23,6 +23,9 @@ services:
 
   frontend:
     image: jenkneo/foodgram-frontend:latest
+#    build:
+#      context: ../frontend
+#      dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
 
