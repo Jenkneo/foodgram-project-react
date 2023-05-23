@@ -10,10 +10,6 @@ services:
     ports:
       - "5432:5432"
 
-    # Вопрос ревьюеру:
-    # можно ли оставить порты открытые? Безопасно ли это?
-    # или 1000 и 1 способ загрузки csv без доступа к БД...
-
   backend:
     image: jenkneo/foodgram-project-react:latest
     restart: always
@@ -40,6 +36,9 @@ services:
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static_value:/var/html/static/
       - media_value:/var/html/media/
+    depends_on:
+      - frontend
+      - backend
 
 volumes:
   db_value:
