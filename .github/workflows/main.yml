@@ -36,7 +36,6 @@ jobs:
           script: |
             sudo docker-compose stop
             sudo docker-compose rm -f backend
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-project-react:latest
             rm .env
             touch .env
             echo DB_NAME=${{ secrets.DB_NAME }} >> .env
