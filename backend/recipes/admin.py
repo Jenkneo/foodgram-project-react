@@ -3,12 +3,18 @@ from django.contrib import admin
 from .models import Ingredient, Tag, Recipe, AmountIngredient
 
 
+class IngredientInline(admin.TabularInline):
+    model = AmountIngredient
+    extra = 2
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'author', 'favorite_count')
     list_filter = ('name', 'author', 'tags')
     readonly_fields = ('favorite_count',)
     empty_value_display = '-пусто-'
+    inlines = (IngredientInline,)
 
     def favorite_count(self, obj):
         return obj.in_favorites.count()
